@@ -4,8 +4,10 @@ __pycache__/
 .env
 .pytest_cache/
 
-# Ignore massive data artifacts
-artifacts/
+# Ignore massive data artifacts but keep presentation visuals
+artifacts/chroma_db/
+!artifacts/*.png
+!artifacts/*.csv
 20_newsgroups/
 twenty+newsgroups/
 
