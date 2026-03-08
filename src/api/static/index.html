@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trademarkia Semantic Search</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+        
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: rgba(24, 24, 27, 0.6);
+            --border-glow: rgba(139, 92, 246, 0.3);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #8b5cf6;
+            --accent-glow: #d946ef;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at top right, #1a1025, var(--bg-dark));
+            background-size: cover;
+            background-attachment: fixed;
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+        }
+
+        /* Glassmorphism utility */
+        .glass {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Stats Panel */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a78bfa, #f472b6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
+        }
+
+        /* Search Interface */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 1.5rem 2rem;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Results */
+        .result-card {
+            margin-bottom: 1rem;
+            animation: slideUp 0.4s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes slideUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 100px;
+            background: rgba(139, 92, 246, 0.1);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .score {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #34d399;
+        }
+
+        .result-text {
+            color: #cbd5e1;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* Meta Dash */
+        .meta-dash {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 1px dashed rgba(255,255,255,0.1);
+        }
+
+        .badge-hit { background: rgba(52, 211, 153, 0.1); color: #34d399; border-color: rgba(52, 211, 153, 0.3); }
+        .badge-miss { background: rgba(248, 113, 113, 0.1); color: #f87171; border-color: rgba(248, 113, 113, 0.3); }
+
+        /* Loader */
+        .loader {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Content -->
+        <div>
+            <div style="margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(to right, #fff, #a78bfa); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Trademarkia Semantic Search</h1>
+                <p style="color: var(--text-muted);">Fuzzy clustering memory engine over 20 Newsgroups.</p>
+            </div>
+
+            <div class="search-wrapper">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search the corpus (e.g. 'best firearms for home defense')..." onkeypress="handleKey(event)">
+            </div>
+
+            <div id="loader" class="loader"></div>
+            <div id="resultsContainer"></div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="glass" style="height: fit-content;">
+            <h3 style="margin-top: 0; color: #e2e8f0; font-size: 1.1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 1rem;">Live Cache Telemetry</h3>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card"><div class="stat-value" id="hitRate">0%</div><div class="stat-label">Hit Rate</div></div>
+                <div class="stat-card"><div class="stat-value" id="cacheSize">0</div><div class="stat-label">Entries</div></div>
+                <div class="stat-card"><div class="stat-value" id="hitCount">0</div><div class="stat-label">Hits</div></div>
+                <div class="stat-card" style="grid-column: span 2;">
+                    <button onclick="flushCache()" style="width:100%; padding:0.8rem; background:rgba(239, 68, 68, 0.1); border:1px solid rgba(239, 68, 68, 0.3); color:#fca5a5; border-radius:8px; cursor:pointer; font-family:'Outfit', sans-serif; font-weight:600; transition:all 0.2s;">Flush Cache Matrix</button>
+                </div>
+            </div>
+
+            <div id="queryMeta" class="meta-dash" style="display:none;">
+                <h4 style="margin-top:0; color:#94a3b8;">Latest Query Execution</h4>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                    <span style="color:#64748b; font-size:0.9rem;">Status</span>
+                    <span id="metaHit" class="tag">MISS</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                    <span style="color:#64748b; font-size:0.9rem;">Latency</span>
+                    <strong id="metaLatency" style="color:#f8fafc;">0ms</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.8rem;">
+                    <span style="color:#64748b; font-size:0.9rem;">Dominant Topic</span>
+                    <strong id="metaCluster" style="color:#c4b5fd;">Cluster 0</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color:#64748b; font-size:0.9rem;">Fuzzy Entropy</span>
+                    <strong id="metaEntropy" style="color:#f8fafc;">0.00</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function fetchStats() {
+            try {
+                const res = await fetch('/cache/stats');
+                const data = await res.json();
+                
+                document.getElementById('hitRate').textContent = (data.hit_rate * 100).toFixed(1) + '%';
+                document.getElementById('cacheSize').textContent = data.total_entries;
+                document.getElementById('hitCount').textContent = data.hit_count;
+            } catch (e) { console.error('Stats poll failed', e); }
+        }
+
+        async function flushCache() {
+            if(!confirm("Erase all semantic memory?")) return;
+            await fetch('/cache', { method: 'DELETE' });
+            fetchStats();
+        }
+
+        function handleKey(e) {
+            if(e.key === 'Enter') executeSearch();
+        }
+
+        async function executeSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if(!query) return;
+
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('resultsContainer').innerHTML = '';
+            
+            try {
+                const res = await fetch('/query', {
+                    method: 'POST',
+                    headers:{'Content-Type': 'application/json'},
+                    body: JSON.stringify({query: query, top_k: 5})
+                });
+                
+                const data = await res.json();
+                renderResults(data);
+                
+                // Update Meta dash
+                document.getElementById('queryMeta').style.display = 'block';
+                const hitBadge = document.getElementById('metaHit');
+                hitBadge.textContent = data.cache_hit ? 'CACHE HIT \u26A1' : 'MEMORY MISS';
+                hitBadge.className = 'tag ' + (data.cache_hit ? 'badge-hit' : 'badge-miss');
+                
+                document.getElementById('metaLatency').textContent = data.latency_ms.toFixed(2) + 'ms';
+                document.getElementById('metaCluster').textContent = `Cluster ${data.dominant_cluster}`;
+                document.getElementById('metaEntropy').textContent = data.membership_entropy.toFixed(3);
+
+                fetchStats();
+            } catch (e) {
+                document.getElementById('resultsContainer').innerHTML = `<div class="glass" style="color:#f87171;">Query error: ${e.message}</div>`;
+            } finally {
+                document.getElementById('loader').style.display = 'none';
+            }
+        }
+
+        function renderResults(data) {
+            const container = document.getElementById('resultsContainer');
+            if(!data.result.top_chunks || data.result.top_chunks.length === 0) {
+                container.innerHTML = `<div class="glass" style="text-align:center; color:#94a3b8;">No strong semantic matches found.</div>`;
+                return;
+            }
+
+            data.result.top_chunks.forEach((chunk, index) => {
+                const delay = index * 0.1;
+                const div = document.createElement('div');
+                div.className = 'glass result-card';
+                div.style.animationDelay = `${delay}s`;
+                
+                div.innerHTML = `
+                    <div class="result-header">
+                        <span class="tag">${chunk.newsgroup}</span>
+                        <span class="score">${(chunk.score * 100).toFixed(1)}% Match</span>
+                    </div>
+                    <div style="font-weight: 500; margin-bottom: 0.8rem; color: #e2e8f0;">${chunk.subject}</div>
+                    <div class="result-text">${chunk.text}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Initial poll
+        fetchStats();
+    </script>
+</body>
+</html>

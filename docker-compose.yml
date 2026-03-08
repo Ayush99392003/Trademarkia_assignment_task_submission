@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  semantic-search:
+    build: .
+    volumes:
+      - chroma_data:/app/artifacts
+      - type: bind
+        source: c:/Users/ayush/Videos/Trademarkia/twenty+newsgroups/20_newsgroups
+        target: /app/data
+        read_only: true
+    ports:
+      - "8080:8000"
+    environment:
+      - PYTHONPATH=/app
+    restart: unless-stopped
+
+volumes:
+  chroma_data:

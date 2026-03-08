@@ -1,0 +1,16 @@
+.git
+.gitignore
+venv/
+__pycache__/
+*.pyc
+
+# Do not copy massive artifacts, they are mapped via volume or not needed for API build
+artifacts/
+20_newsgroups/
+twenty+newsgroups/
+notebooks/
+scripts/
+
+# Ignore Docker files
+Dockerfile
+docker-compose.yml
