@@ -148,6 +148,25 @@ The API dynamically strips structural noise (headers, replies, signatures) and r
 
 ---
 
+## 📂 Analytical Artifacts
+
+The system generates several artifacts during the clustering and evaluation phase to provide transparency into the model's decision-making process.
+
+### 1. `artifacts/umap_clusters.png`
+A 2D projection of the high-dimensional document space. This visualization confirms that the topics are not isolated clusters but have significant **organically overlapping boundaries**, justifying the use of Fuzzy C-Means over hard clustering.
+
+### 2. `artifacts/heatmap.png`
+A Cluster Cross-Membership Heatmap. By computing $U^T U$, we reveal which topic pairs (e.g., `sci.crypt` and `talk.politics.misc`) share the most semantic DNA. This serves as the ground truth for our **Semantic Router**.
+
+### 3. `artifacts/sample_results.csv`
+A detailed telemetry log of recent queries. It contains:
+*   **Membership Entropy**: A mathematical measure of the model's uncertainty. High entropy indicates the query sits exactly on a boundary between topics.
+*   **Dominant Cluster**: The logical memory bucket used for routing.
+*   **Latency (ms)**: Proof of the sub-30ms performance of the semantic memory engine.
+*   **Similarity Score**: The cosine distance between the user query and the retrieved database chunks.
+
+---
+
 ## 🚀 Quick Start (Dockerized Deployment)
 
 To completely bypass local Python SQLite limits and OS-specific C++ compiler mismatches, the entire suite is packaged cleanly into Docker.
