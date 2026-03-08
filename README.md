@@ -105,6 +105,49 @@ graph TD
 
 ---
 
+## 📊 Sample Search Extractions
+
+The API dynamically strips structural noise (headers, replies, signatures) and ranks dense chunks via Fuzzy Membership routing. Full telemetry is captured in `artifacts/sample_results.csv`.
+
+| Query Intent | Hit? | Cluster | Entropy | Latency | Top Result (Newsgroup) |
+|-------------|:---:|:---:|:---:|:---:|---|
+| `best firearms for home defense` | ✅ | `2` | `1.6094` | `18ms` | `talk.politics.guns` |
+| `how to encrypt files using pgp` | ✅ | `3` | `1.6094` | `24ms` | `sci.crypt` |
+| `nasa space shuttle launch` | ✅ | `0` | `1.6094` | `19ms` | `sci.space` |
+
+> [!NOTE]
+> Latencies represent semantic cache lookups. Cold-cache (first-time) query latency typically ranges from 1-3 seconds depending on dimensionality.
+
+---
+
+## 🛠️ API Specification
+
+### `POST /query`
+**Request Body:**
+```json
+{ "query": "cryptography and privacy", "top_k": 5 }
+```
+
+**Response Body:**
+```json
+{
+  "query": "cryptography and privacy",
+  "cache_hit": true,
+  "matched_query": "how to encrypt files using pgp",
+  "similarity_score": 0.9412,
+  "cluster_theta": 0.8354,
+  "dominant_cluster": 3,
+  "membership_entropy": 1.6094,
+  "search_clusters_used": [3, 0, 1],
+  "latency_ms": 24.12,
+  "result": {
+    "top_chunks": [...]
+  }
+}
+```
+
+---
+
 ## 🚀 Quick Start (Dockerized Deployment)
 
 To completely bypass local Python SQLite limits and OS-specific C++ compiler mismatches, the entire suite is packaged cleanly into Docker.
