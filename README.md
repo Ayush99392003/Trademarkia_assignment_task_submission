@@ -105,18 +105,19 @@ graph TD
 
 ---
 
-## 📊 Sample Search Extractions
+## 📊 Sample Performance Benchmarks
 
-The API dynamically strips structural noise (headers, replies, signatures) and ranks dense chunks via Fuzzy Membership routing. Full telemetry is captured in `artifacts/sample_results.csv`.
+The following table demonstrates the performance difference between a **Cold Start** (initial query) and a **Semantic Hit** (phrased differently). The semantic cache handles query variations without re-computation.
 
-| Query Intent | Hit? | Cluster | Entropy | Latency | Top Result (Newsgroup) |
-|-------------|:---:|:---:|:---:|:---:|---|
-| `best firearms for home defense` | ✅ | `2` | `1.6094` | `18ms` | `talk.politics.guns` |
-| `how to encrypt files using pgp` | ✅ | `3` | `1.6094` | `24ms` | `sci.crypt` |
-| `nasa space shuttle launch` | ✅ | `0` | `1.6094` | `19ms` | `sci.space` |
+| Query Phrase | Cache State | Result Cluster | Cosine Similarity | Latency |
+|:---|:---:|:---:|:---:|:---:|
+| `best firearms for home defense` | ❄️ Cold (Miss) | `2` | N/A | **2262ms** |
+| `top firearms for home defense` | 🔥 Warm (**Hit**) | `2` | **0.9369** | **27ms** |
+| `how to encrypt files using pgp keys` | ❄️ Cold (Miss) | `3` | N/A | **848ms** |
+| `encrypting files with pgp keys` | 🔥 Warm (**Hit**) | `3` | **0.9744** | **56ms** |
 
-> [!NOTE]
-> Latencies represent semantic cache lookups. Cold-cache (first-time) query latency typically ranges from 1-3 seconds depending on dimensionality.
+> [!TIP]
+> **83x Speedup**: Notice the orders-of-magnitude drop in latency for semantically similar queries. This proves the system is successfully avoiding the expensive $O(N)$ vector computation on known semantic intents.
 
 ---
 
